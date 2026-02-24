@@ -34,7 +34,7 @@ struct PopoverView: View {
 
     private var header: some View {
         HStack {
-            Image(systemName: "leaf.fill")
+            Image("github-copilot-icon")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 20, height: 20)

@@ -16,8 +16,10 @@ struct MenuBarLabel: View {
                     .font(.system(size: 12, weight: .medium, design: .default).monospacedDigit())
             }
 
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 16))
+            Image("github-copilot-icon")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 16)
 
             if let usage {
                 MenuBarProgressBar(usage: usage)
@@ -28,7 +30,7 @@ struct MenuBarLabel: View {
         renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
 
         guard let cgImage = renderer.cgImage else {
-            return NSImage(systemSymbolName: "leaf.fill", accessibilityDescription: nil) ?? NSImage()
+            return NSImage(named: "github-copilot-icon") ?? NSImage()
         }
 
         let image = NSImage(cgImage: cgImage, size: NSSize(

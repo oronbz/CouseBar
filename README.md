@@ -1,4 +1,4 @@
-# CouseBar
+# Cousebara
 
 A macOS menu bar app for monitoring GitHub Copilot premium interaction usage.
 
@@ -15,10 +15,10 @@ A macOS menu bar app for monitoring GitHub Copilot premium interaction usage.
 
 ```sh
 brew tap oronbz/tap
-brew install --cask cousebar
+brew install --cask cousebara
 ```
 
-Or download `CouseBar.zip` from the [latest release](https://github.com/oronbz/CouseBar/releases/latest), unzip, and move `CouseBar.app` to `/Applications`.
+Or download `Cousebara.zip` from the [latest release](https://github.com/oronbz/Cousebara/releases/latest), unzip, and move `Cousebara.app` to `/Applications`.
 
 ## Requirements
 
@@ -27,7 +27,7 @@ Or download `CouseBar.zip` from the [latest release](https://github.com/oronbz/C
 
 ## How It Works
 
-CouseBar reads your Copilot OAuth token from `~/.config/github-copilot/apps.json` and calls the `https://api.github.com/copilot_internal/user` endpoint to fetch your `premium_interactions` quota snapshot. No additional login is required.
+Cousebara reads your Copilot OAuth token from `~/.config/github-copilot/apps.json` and calls the `https://api.github.com/copilot_internal/user` endpoint to fetch your `premium_interactions` quota snapshot. No additional login is required.
 
 ### Progress Bar Colors
 
@@ -41,26 +41,26 @@ CouseBar reads your Copilot OAuth token from `~/.config/github-copilot/apps.json
 ## Building from Source
 
 1. Clone the repo
-2. Open `CouseBar.xcodeproj` in Xcode
+2. Open `Cousebara.xcodeproj` in Xcode
 3. Build and run (Cmd+R)
 
 ## Releasing a New Version
 
 1. Build a Release archive:
    ```sh
-   xcodebuild -project CouseBar.xcodeproj -scheme CouseBar -configuration Release \
-     -archivePath /tmp/CouseBar.xcarchive archive
+   xcodebuild -project Cousebara.xcodeproj -scheme Cousebara -configuration Release \
+     -archivePath /tmp/Cousebara.xcarchive archive
    ```
 2. Zip the `.app`:
    ```sh
-   cd /tmp/CouseBar.xcarchive/Products/Applications/
-   ditto -c -k --sequesterRsrc --keepParent CouseBar.app /tmp/CouseBar.zip
+   cd /tmp/Cousebara.xcarchive/Products/Applications/
+   ditto -c -k --sequesterRsrc --keepParent Cousebara.app /tmp/Cousebara.zip
    ```
 3. Create a GitHub release:
    ```sh
-   gh release create v1.x.0 /tmp/CouseBar.zip --repo oronbz/CouseBar --title "CouseBar v1.x.0"
+   gh release create v1.x.0 /tmp/Cousebara.zip --repo oronbz/Cousebara --title "Cousebara v1.x.0"
    ```
 4. Update the Homebrew tap formula at [`oronbz/homebrew-tap`](https://github.com/oronbz/homebrew-tap):
-   - Update `version` and `sha256` in `Casks/cousebar.rb`
-   - `sha256` can be computed with `shasum -a 256 /tmp/CouseBar.zip`
-5. Users upgrade with `brew upgrade --cask cousebar`
+   - Update `version` and `sha256` in `Casks/cousebara.rb`
+   - `sha256` can be computed with `shasum -a 256 /tmp/Cousebara.zip`
+5. Users upgrade with `brew upgrade --cask cousebara`

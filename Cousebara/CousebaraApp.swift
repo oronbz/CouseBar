@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct CouseBarApp: App {
+struct CousebaraApp: App {
     @State private var service = CopilotService()
     @AppStorage("showPercentageInMenuBar") private var showPercentage = false
 

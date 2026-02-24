@@ -8,6 +8,10 @@ struct ContentView: View {
     }
 }
 
-#Preview {
-    ContentView(service: CopilotService())
+#Preview("Normal Usage") {
+    ContentView(service: .previewMediumUsage)
+}
+
+#Preview("Over Limit") {
+    ContentView(service: .previewOverLimit)
 }

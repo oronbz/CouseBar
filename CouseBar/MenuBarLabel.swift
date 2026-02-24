@@ -49,9 +49,10 @@ struct MenuBarProgressBar: View {
                 .frame(width: barWidth, height: barHeight)
 
             // Filled portion
+            let filledWidth = CGFloat(max(0, usage.normalFraction * barWidth))
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(normalColor)
-                .frame(width: max(0, usage.normalFraction * barWidth), height: barHeight)
+                .frame(width: filledWidth, height: barHeight)
         }
     }
 
@@ -69,10 +70,10 @@ struct MenuBarProgressBar: View {
                 ))
 
             // Red overshoot portion
-            let overshootWidth = min(usage.overageFraction, 1.0) * barWidth
+            let overshootWidth = CGFloat(min(usage.overageFraction, 1.0) * barWidth)
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(Color.red)
-                .frame(width: max(0, overshootWidth), height: barHeight)
+                .frame(width: overshootWidth, height: barHeight)
                 .clipShape(UnevenRoundedRectangle(
                     topLeadingRadius: 0,
                     bottomLeadingRadius: 0,
@@ -92,4 +93,54 @@ struct MenuBarProgressBar: View {
             return .orange
         }
     }
+}
+
+// MARK: - Previews
+
+#Preview("Low Usage (30%)") {
+    MenuBarLabel(usage: .lowUsage)
+        .padding()
+}
+
+#Preview("Medium Usage (65%)") {
+    MenuBarLabel(usage: .mediumUsage)
+        .padding()
+}
+
+#Preview("High Usage (90%)") {
+    MenuBarLabel(usage: .highUsage)
+        .padding()
+}
+
+#Preview("At Limit (100%)") {
+    MenuBarLabel(usage: .atLimit)
+        .padding()
+}
+
+#Preview("Slightly Over (110%)") {
+    MenuBarLabel(usage: .slightlyOver)
+        .padding()
+}
+
+#Preview("Over Limit (154%)") {
+    MenuBarLabel(usage: .overLimit)
+        .padding()
+}
+
+#Preview("No Data") {
+    MenuBarLabel(usage: nil)
+        .padding()
+}
+
+#Preview("All States") {
+    VStack(alignment: .leading, spacing: 12) {
+        LabeledContent("30%") { MenuBarLabel(usage: .lowUsage) }
+        LabeledContent("65%") { MenuBarLabel(usage: .mediumUsage) }
+        LabeledContent("90%") { MenuBarLabel(usage: .highUsage) }
+        LabeledContent("100%") { MenuBarLabel(usage: .atLimit) }
+        LabeledContent("110%") { MenuBarLabel(usage: .slightlyOver) }
+        LabeledContent("154%") { MenuBarLabel(usage: .overLimit) }
+        LabeledContent("No data") { MenuBarLabel(usage: nil) }
+    }
+    .padding()
 }

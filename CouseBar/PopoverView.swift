@@ -242,9 +242,10 @@ struct PopoverProgressBar: View {
     }
 
     private func normalFill(totalWidth: CGFloat, height: CGFloat) -> some View {
-        RoundedRectangle(cornerRadius: cornerRadius)
+        let fillWidth = CGFloat(max(0, usage.normalFraction)) * totalWidth
+        return RoundedRectangle(cornerRadius: cornerRadius)
             .fill(normalGradient)
-            .frame(width: max(0, usage.normalFraction * totalWidth), height: height)
+            .frame(width: fillWidth, height: height)
     }
 
     private func overLimitFill(totalWidth: CGFloat, height: CGFloat) -> some View {
@@ -276,4 +277,38 @@ struct PopoverProgressBar: View {
         }
         return LinearGradient(colors: [color.opacity(0.8), color], startPoint: .leading, endPoint: .trailing)
     }
+}
+
+// MARK: - Previews
+
+#Preview("Low Usage (30%)") {
+    PopoverView(service: .previewLowUsage)
+}
+
+#Preview("Medium Usage (65%)") {
+    PopoverView(service: .previewMediumUsage)
+}
+
+#Preview("High Usage (90%)") {
+    PopoverView(service: .previewHighUsage)
+}
+
+#Preview("At Limit (100%)") {
+    PopoverView(service: .previewAtLimit)
+}
+
+#Preview("Slightly Over (110%)") {
+    PopoverView(service: .previewSlightlyOver)
+}
+
+#Preview("Over Limit (154%)") {
+    PopoverView(service: .previewOverLimit)
+}
+
+#Preview("Loading") {
+    PopoverView(service: .previewLoading)
+}
+
+#Preview("Error") {
+    PopoverView(service: .previewError)
 }

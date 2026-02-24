@@ -43,6 +43,24 @@ struct QuotaSnapshot: Decodable {
         case unlimited
     }
 
+    init(
+        entitlement: Int,
+        overageCount: Int = 0,
+        overagePermitted: Bool = true,
+        percentRemaining: Double,
+        quotaRemaining: Double,
+        remaining: Int,
+        unlimited: Bool = false
+    ) {
+        self.entitlement = entitlement
+        self.overageCount = overageCount
+        self.overagePermitted = overagePermitted
+        self.percentRemaining = percentRemaining
+        self.quotaRemaining = quotaRemaining
+        self.remaining = remaining
+        self.unlimited = unlimited
+    }
+
     var used: Int {
         entitlement - remaining
     }
@@ -97,12 +115,35 @@ final class CopilotService {
 
     private var refreshTimer: Timer?
     private let refreshInterval: TimeInterval = 15 * 60 // 15 minutes
+    private let skipNetwork: Bool
 
     init() {
+        skipNetwork = false
         startAutoRefresh()
     }
 
+    /// Preview-only initializer that populates state without network calls.
+    init(
+        usage: QuotaSnapshot?,
+        login: String? = "oronbz",
+        plan: String? = "enterprise",
+        resetDate: String? = "2026-03-01",
+        error: String? = nil,
+        isLoading: Bool = false
+    ) {
+        self.skipNetwork = true
+        self.usage = usage
+        self.login = login
+        self.plan = plan
+        self.resetDate = resetDate
+        self.error = error
+        self.isLoading = isLoading
+        self.lastUpdated = Date()
+    }
+
     func startAutoRefresh() {
+        guard !skipNetwork else { return }
+
         // Initial fetch
         Task { await refresh() }
 
@@ -115,6 +156,8 @@ final class CopilotService {
     }
 
     func refresh() async {
+        guard !skipNetwork else { return }
+
         isLoading = true
         defer { isLoading = false }
 
@@ -175,4 +218,72 @@ enum CopilotError: LocalizedError {
         case .apiError: "GitHub API request failed"
         }
     }
+}
+
+// MARK: - Preview Mock Data
+
+extension QuotaSnapshot {
+    /// Low usage: 30% used (300 / 1000)
+    static let lowUsage = QuotaSnapshot(
+        entitlement: 1000,
+        percentRemaining: 70.0,
+        quotaRemaining: 700.0,
+        remaining: 700
+    )
+
+    /// Medium usage: 65% used (650 / 1000)
+    static let mediumUsage = QuotaSnapshot(
+        entitlement: 1000,
+        percentRemaining: 35.0,
+        quotaRemaining: 350.0,
+        remaining: 350
+    )
+
+    /// High usage: 90% used (900 / 1000)
+    static let highUsage = QuotaSnapshot(
+        entitlement: 1000,
+        percentRemaining: 10.0,
+        quotaRemaining: 100.0,
+        remaining: 100
+    )
+
+    /// At limit: 100% used (1000 / 1000)
+    static let atLimit = QuotaSnapshot(
+        entitlement: 1000,
+        percentRemaining: 0.0,
+        quotaRemaining: 0.0,
+        remaining: 0
+    )
+
+    /// Over limit: 154% used (1540 / 1000), matching real API negative values
+    static let overLimit = QuotaSnapshot(
+        entitlement: 1000,
+        overageCount: 540,
+        percentRemaining: -54.099,
+        quotaRemaining: -540.99,
+        remaining: -540
+    )
+
+    /// Slightly over: 110% used (1100 / 1000)
+    static let slightlyOver = QuotaSnapshot(
+        entitlement: 1000,
+        overageCount: 100,
+        percentRemaining: -10.0,
+        quotaRemaining: -100.0,
+        remaining: -100
+    )
+}
+
+extension CopilotService {
+    static let previewLowUsage = CopilotService(usage: .lowUsage)
+    static let previewMediumUsage = CopilotService(usage: .mediumUsage)
+    static let previewHighUsage = CopilotService(usage: .highUsage)
+    static let previewAtLimit = CopilotService(usage: .atLimit)
+    static let previewOverLimit = CopilotService(usage: .overLimit)
+    static let previewSlightlyOver = CopilotService(usage: .slightlyOver)
+    static let previewLoading = CopilotService(usage: nil, isLoading: true)
+    static let previewError = CopilotService(
+        usage: nil,
+        error: "No Copilot OAuth token found in ~/.config/github-copilot/apps.json"
+    )
 }

@@ -1,0 +1,26 @@
+# Xcode
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Build
+build/
+DerivedData/
+*.moved-aside
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Dependencies
+Packages/
+.build/
+
+# macOS
+.DS_Store
+*.swp
+*~.nib
+
+# Archives
+*.xcarchive

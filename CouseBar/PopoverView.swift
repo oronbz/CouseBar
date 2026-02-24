@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PopoverView: View {
     let service: CopilotService
+    @AppStorage("showPercentageInMenuBar") private var showPercentage = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -14,6 +15,8 @@ struct PopoverView: View {
                 usageSection(usage)
                 Divider()
                 detailsSection(usage)
+                Divider()
+                settingsSection
                 Divider()
                 footerSection
             } else {
@@ -31,8 +34,7 @@ struct PopoverView: View {
 
     private var header: some View {
         HStack {
-            Image("CopilotIcon")
-                .renderingMode(.template)
+            Image(systemName: "leaf.fill")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 20, height: 20)
@@ -185,6 +187,15 @@ struct PopoverView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
+    }
+
+    // MARK: - Settings
+
+    private var settingsSection: some View {
+        Toggle("Show Percentage in Menu Bar", isOn: $showPercentage)
+            .font(.caption)
+            .toggleStyle(.switch)
+            .controlSize(.mini)
     }
 
     // MARK: - Footer

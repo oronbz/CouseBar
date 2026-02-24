@@ -68,8 +68,7 @@ xcodebuild -project Cousebara.xcodeproj -scheme Cousebara -configuration Debug b
 Distributed via Homebrew Cask:
 
 ```sh
-brew tap oronbz/tap
-brew install --cask cousebara
+brew install --cask oronbz/tap/cousebara
 ```
 
 The tap repo is at https://github.com/oronbz/homebrew-tap.

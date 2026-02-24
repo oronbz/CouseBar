@@ -14,11 +14,16 @@ A macOS menu bar app for monitoring GitHub Copilot premium interaction usage.
 ## Install
 
 ```sh
-brew tap oronbz/tap
-brew install --cask cousebara
+brew install --cask oronbz/tap/cousebara
 ```
 
 Or download `Cousebara.zip` from the [latest release](https://github.com/oronbz/Cousebara/releases/latest), unzip, and move `Cousebara.app` to `/Applications`.
+
+## Update
+
+```sh
+brew update && brew upgrade --cask cousebara
+```
 
 ## Requirements
 
@@ -63,4 +68,4 @@ Cousebara reads your Copilot OAuth token from `~/.config/github-copilot/apps.jso
 4. Update the Homebrew tap formula at [`oronbz/homebrew-tap`](https://github.com/oronbz/homebrew-tap):
    - Update `version` and `sha256` in `Casks/cousebara.rb`
    - `sha256` can be computed with `shasum -a 256 /tmp/Cousebara.zip`
-5. Users upgrade with `brew upgrade --cask cousebara`
+5. Users upgrade with `brew update && brew upgrade --cask cousebara`

@@ -1,24 +1,13 @@
-//
-//  ContentView.swift
-//  CouseBar
-//
-//  Created by Oron Ben Zvi on 24/02/2026.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    let service: CopilotService
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        PopoverView(service: service)
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(service: CopilotService())
 }

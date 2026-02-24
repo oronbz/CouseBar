@@ -1,17 +1,15 @@
-//
-//  CouseBarApp.swift
-//  CouseBar
-//
-//  Created by Oron Ben Zvi on 24/02/2026.
-//
-
 import SwiftUI
 
 @main
 struct CouseBarApp: App {
+    @State private var service = CopilotService()
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra {
+            PopoverView(service: service)
+        } label: {
+            MenuBarLabel(usage: service.usage)
         }
+        .menuBarExtraStyle(.window)
     }
 }

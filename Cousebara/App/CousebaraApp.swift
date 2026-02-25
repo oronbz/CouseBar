@@ -19,7 +19,8 @@ struct CousebaraApp: App {
         } label: {
             MenuBarLabel(
                 usage: store.popover.usage,
-                showPercentage: store.popover.showPercentage
+                showPercentage: store.popover.showPercentage,
+                showRemaining: store.popover.showRemaining
             )
         }
         .menuBarExtraStyle(.window)

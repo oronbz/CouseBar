@@ -18,6 +18,7 @@ struct PopoverFeature {
         var resetDate: String?
         var showCopiedConfirmation = false
         @Shared(.appStorage("showPercentageInMenuBar")) var showPercentage = false
+        @Shared(.appStorage("showRemainingInsteadOfUsed")) var showRemaining = false
         var usage: QuotaSnapshot?
     }
 

@@ -84,6 +84,11 @@ struct QuotaSnapshot: Decodable, Equatable, Sendable {
         return min(1.0, Double(used) / Double(entitlement))
     }
 
+    /// Fraction remaining (complement of normalFraction), returns 0.0 when at/over limit
+    var remainingFraction: Double {
+        max(0, 1.0 - normalFraction)
+    }
+
     /// Fraction of overshoot beyond 100% (e.g. 0.54 means 54% overshoot)
     var overageFraction: Double {
         guard entitlement > 0, isOverLimit else { return 0 }

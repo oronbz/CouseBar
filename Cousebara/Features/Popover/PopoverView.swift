@@ -82,23 +82,26 @@ struct PopoverView: View {
 
                 Spacer()
 
-                Text("\(usage.used) / \(usage.entitlement)")
+                Text(store.showRemaining
+                    ? "\(usage.remaining) / \(usage.entitlement)"
+                    : "\(usage.used) / \(usage.entitlement)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             // Large progress bar
-            PopoverProgressBar(usage: usage)
+            PopoverProgressBar(usage: usage, showRemaining: store.showRemaining)
                 .frame(height: 12)
         }
     }
 
     private func usagePercentText(_ usage: QuotaSnapshot) -> String {
-        let percent = usage.percentUsed
-        if percent > 100 {
-            return String(format: "%.0f%% used", percent)
+        if store.showRemaining {
+            let percent = usage.percentRemaining
+            return String(format: "%.0f%% remaining", percent)
+        } else {
+            return String(format: "%.0f%% used", usage.percentUsed)
         }
-        return String(format: "%.0f%% used", percent)
     }
 
     private func usageColor(_ usage: QuotaSnapshot) -> Color {
@@ -207,10 +210,15 @@ struct PopoverView: View {
     // MARK: - Settings
 
     private var settingsSection: some View {
-        Toggle("Show Percentage in Menu Bar", isOn: $store.showPercentage)
-            .font(.caption)
-            .toggleStyle(.switch)
-            .controlSize(.mini)
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle("Show Percentage in Menu Bar", isOn: $store.showPercentage)
+                .font(.caption)
+                .toggleStyle(.checkbox)
+
+            Toggle("Show Remaining Instead of Used", isOn: $store.showRemaining)
+                .font(.caption)
+                .toggleStyle(.checkbox)
+        }
     }
 
     // MARK: - Update Banner
@@ -309,6 +317,7 @@ struct PopoverView: View {
 
 struct PopoverProgressBar: View {
     let usage: QuotaSnapshot
+    let showRemaining: Bool
 
     private let cornerRadius: CGFloat = 4
 
@@ -323,13 +332,22 @@ struct PopoverProgressBar: View {
                     .fill(Color.primary.opacity(0.1))
                     .frame(width: totalWidth, height: height)
 
-                if usage.isOverLimit {
+                if showRemaining {
+                    remainingFill(totalWidth: totalWidth, height: height)
+                } else if usage.isOverLimit {
                     overLimitFill(totalWidth: totalWidth, height: height)
                 } else {
                     normalFill(totalWidth: totalWidth, height: height)
                 }
             }
         }
+    }
+
+    private func remainingFill(totalWidth: CGFloat, height: CGFloat) -> some View {
+        let fillWidth = CGFloat(usage.remainingFraction) * totalWidth
+        return RoundedRectangle(cornerRadius: cornerRadius)
+            .fill(normalGradient)
+            .frame(width: fillWidth, height: height)
     }
 
     private func normalFill(totalWidth: CGFloat, height: CGFloat) -> some View {

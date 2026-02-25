@@ -4,6 +4,7 @@ import SwiftUI
 struct MenuBarLabel: View {
     let usage: QuotaSnapshot?
     let showPercentage: Bool
+    let showRemaining: Bool
 
     var body: some View {
         Image(nsImage: menuBarImage)
@@ -12,7 +13,7 @@ struct MenuBarLabel: View {
     private var menuBarImage: NSImage {
         let content = HStack(alignment: .center, spacing: 3) {
             if showPercentage, let usage {
-                Text("\(Int(usage.percentUsed.rounded()))%")
+                Text("\(Int((showRemaining ? usage.percentRemaining : usage.percentUsed).rounded()))%")
                     .font(.system(size: 12, weight: .medium, design: .default).monospacedDigit())
             }
 
@@ -22,7 +23,7 @@ struct MenuBarLabel: View {
                 .frame(height: 16)
 
             if !showPercentage, let usage {
-                MenuBarProgressBar(usage: usage)
+                MenuBarProgressBar(usage: usage, showRemaining: showRemaining)
             }
         }
 
@@ -48,6 +49,7 @@ struct MenuBarLabel: View {
 /// Uses opacity to match the template image tinting behavior.
 struct MenuBarProgressBar: View {
     let usage: QuotaSnapshot
+    let showRemaining: Bool
 
     private let barWidth: CGFloat = 10
     private let barHeight: CGFloat = 18
@@ -80,7 +82,9 @@ struct MenuBarProgressBar: View {
     }
 
     private var fillFraction: CGFloat {
-        if usage.isOverLimit {
+        if showRemaining {
+            CGFloat(usage.remainingFraction)
+        } else if usage.isOverLimit {
             1.0
         } else {
             CGFloat(usage.normalFraction)
@@ -91,60 +95,60 @@ struct MenuBarProgressBar: View {
 // MARK: - Previews
 
 #Preview("Low Usage (30%)") {
-    MenuBarLabel(usage: .lowUsage, showPercentage: false)
+    MenuBarLabel(usage: .lowUsage, showPercentage: false, showRemaining: false)
         .padding()
 }
 
 #Preview("Medium Usage (65%)") {
-    MenuBarLabel(usage: .mediumUsage, showPercentage: false)
+    MenuBarLabel(usage: .mediumUsage, showPercentage: false, showRemaining: false)
         .padding()
 }
 
 #Preview("High Usage (90%)") {
-    MenuBarLabel(usage: .highUsage, showPercentage: false)
+    MenuBarLabel(usage: .highUsage, showPercentage: false, showRemaining: false)
         .padding()
 }
 
 #Preview("At Limit (100%)") {
-    MenuBarLabel(usage: .atLimit, showPercentage: false)
+    MenuBarLabel(usage: .atLimit, showPercentage: false, showRemaining: false)
         .padding()
 }
 
 #Preview("Slightly Over (110%)") {
-    MenuBarLabel(usage: .slightlyOver, showPercentage: false)
+    MenuBarLabel(usage: .slightlyOver, showPercentage: false, showRemaining: false)
         .padding()
 }
 
 #Preview("Over Limit (154%)") {
-    MenuBarLabel(usage: .overLimit, showPercentage: false)
+    MenuBarLabel(usage: .overLimit, showPercentage: false, showRemaining: false)
         .padding()
 }
 
 #Preview("No Data") {
-    MenuBarLabel(usage: nil, showPercentage: false)
+    MenuBarLabel(usage: nil, showPercentage: false, showRemaining: false)
         .padding()
 }
 
 #Preview("With Percentage") {
     HStack(spacing: 16) {
-        LabeledContent("30%") { MenuBarLabel(usage: .lowUsage, showPercentage: true) }
-        LabeledContent("65%") { MenuBarLabel(usage: .mediumUsage, showPercentage: true) }
-        LabeledContent("90%") { MenuBarLabel(usage: .highUsage, showPercentage: true) }
-        LabeledContent("100%") { MenuBarLabel(usage: .atLimit, showPercentage: true) }
-        LabeledContent("154%") { MenuBarLabel(usage: .overLimit, showPercentage: true) }
+        LabeledContent("30%") { MenuBarLabel(usage: .lowUsage, showPercentage: true, showRemaining: false) }
+        LabeledContent("65%") { MenuBarLabel(usage: .mediumUsage, showPercentage: true, showRemaining: false) }
+        LabeledContent("90%") { MenuBarLabel(usage: .highUsage, showPercentage: true, showRemaining: false) }
+        LabeledContent("100%") { MenuBarLabel(usage: .atLimit, showPercentage: true, showRemaining: false) }
+        LabeledContent("154%") { MenuBarLabel(usage: .overLimit, showPercentage: true, showRemaining: false) }
     }
     .padding()
 }
 
 #Preview("All States") {
     HStack(spacing: 16) {
-        LabeledContent("30%") { MenuBarLabel(usage: .lowUsage, showPercentage: false) }
-        LabeledContent("65%") { MenuBarLabel(usage: .mediumUsage, showPercentage: false) }
-        LabeledContent("90%") { MenuBarLabel(usage: .highUsage, showPercentage: false) }
-        LabeledContent("100%") { MenuBarLabel(usage: .atLimit, showPercentage: false) }
-        LabeledContent("110%") { MenuBarLabel(usage: .slightlyOver, showPercentage: false) }
-        LabeledContent("154%") { MenuBarLabel(usage: .overLimit, showPercentage: false) }
-        LabeledContent("N/A") { MenuBarLabel(usage: nil, showPercentage: false) }
+        LabeledContent("30%") { MenuBarLabel(usage: .lowUsage, showPercentage: false, showRemaining: false) }
+        LabeledContent("65%") { MenuBarLabel(usage: .mediumUsage, showPercentage: false, showRemaining: false) }
+        LabeledContent("90%") { MenuBarLabel(usage: .highUsage, showPercentage: false, showRemaining: false) }
+        LabeledContent("100%") { MenuBarLabel(usage: .atLimit, showPercentage: false, showRemaining: false) }
+        LabeledContent("110%") { MenuBarLabel(usage: .slightlyOver, showPercentage: false, showRemaining: false) }
+        LabeledContent("154%") { MenuBarLabel(usage: .overLimit, showPercentage: false, showRemaining: false) }
+        LabeledContent("N/A") { MenuBarLabel(usage: nil, showPercentage: false, showRemaining: false) }
     }
     .padding()
 }

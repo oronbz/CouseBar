@@ -53,21 +53,8 @@ If no token is found, Cousebara walks you through a quick GitHub sign-in using t
 
 ## Releasing a New Version
 
-1. Build a Release archive:
-   ```sh
-   xcodebuild -project Cousebara.xcodeproj -scheme Cousebara -configuration Release \
-     -archivePath /tmp/Cousebara.xcarchive archive
-   ```
-2. Zip the `.app`:
-   ```sh
-   cd /tmp/Cousebara.xcarchive/Products/Applications/
-   ditto -c -k --sequesterRsrc --keepParent Cousebara.app /tmp/Cousebara.zip
-   ```
-3. Create a GitHub release:
-   ```sh
-   gh release create v1.x.0 /tmp/Cousebara.zip --repo oronbz/Cousebara --title "Cousebara v1.x.0"
-   ```
-4. Update the Homebrew tap formula at [`oronbz/homebrew-tap`](https://github.com/oronbz/homebrew-tap):
-   - Update `version` and `sha256` in `Casks/cousebara.rb`
-   - `sha256` can be computed with `shasum -a 256 /tmp/Cousebara.zip`
-5. Users upgrade with `brew update && brew upgrade --cask cousebara`
+```sh
+make release VERSION=1.6.0
+```
+
+This bumps the version in all source files, runs tests, commits, builds a Release archive, creates a GitHub release with the zip attached, and updates the Homebrew tap formula with the new sha256. Omit `VERSION=` to be prompted interactively.

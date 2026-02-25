@@ -8,14 +8,14 @@ Cousebara is a macOS 14+ menu bar app that monitors GitHub Copilot premium inter
 
 ## Build & Test Commands
 
-**Prefer the Xcode MCP tools** (`xcode_BuildProject`, `xcode_RunAllTests`, `xcode_RunSomeTests`, etc.) over `xcodebuild` CLI commands when available. MCP tools integrate directly with the open Xcode workspace and handle configuration automatically. Fall back to the CLI commands below when MCP is not available or for CI.
+**Prefer the Xcode MCP tools** (`xcode_BuildProject`, `xcode_RunAllTests`, `xcode_RunSomeTests`, etc.) over `xcodebuild` CLI commands when available. MCP tools integrate directly with the open Xcode workspace and handle configuration automatically. Fall back to the Makefile or CLI commands below when MCP is not available or for CI.
 
 ### Build
 
 Xcode MCP: `xcode_BuildProject`
 
 ```sh
-xcodebuild -project Cousebara.xcodeproj -scheme Cousebara -configuration Debug build
+make build
 ```
 
 ### Run All Tests
@@ -23,12 +23,7 @@ xcodebuild -project Cousebara.xcodeproj -scheme Cousebara -configuration Debug b
 Xcode MCP: `xcode_RunAllTests`
 
 ```sh
-xcodebuild test \
-  -project Cousebara.xcodeproj \
-  -scheme Cousebara \
-  -destination 'platform=macOS' \
-  -skipMacroValidation \
-  CODE_SIGNING_ALLOWED=NO
+make test
 ```
 
 ### Run a Single Test
@@ -63,6 +58,14 @@ xcodebuild test \
 
 Test targets: `CousebaraTests` (test files: `AuthFeatureTests.swift`, `PopoverFeatureTests.swift`).
 
+### Release
+
+```sh
+make release VERSION=1.x.0
+```
+
+Bumps version in all source files, runs tests, commits, builds a Release archive, creates a GitHub release, and updates the Homebrew tap. See `scripts/release.sh` for details.
+
 ## Architecture
 
 Uses The Composable Architecture (TCA) with filesystem-synced Xcode project (objectVersion 77 -- files added to `Cousebara/` are automatically included in the build).
@@ -71,7 +74,7 @@ Uses The Composable Architecture (TCA) with filesystem-synced Xcode project (obj
 |---|---|
 | `Cousebara/App/` | App entry point (`CousebaraApp.swift`) and root reducer (`AppFeature.swift`) |
 | `Cousebara/Features/` | TCA feature modules: `Auth/` (sign-in flow), `Popover/` (main UI) |
-| `Cousebara/Dependencies/` | `@DependencyClient` types: `CopilotAPIClient`, `GitHubAuthClient`, `AppTerminator` |
+| `Cousebara/Dependencies/` | `@DependencyClient` types: `CopilotAPIClient`, `GitHubAuthClient`, `AppTerminator`, `VersionClient` |
 | `Cousebara/Models/` | Decodable response models, error enums, mock data |
 | `Cousebara/Views/` | Shared views: `ContentView`, `MenuBarLabel` |
 | `CousebaraTests/` | Swift Testing tests using TCA `TestStore` |

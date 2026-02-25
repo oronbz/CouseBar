@@ -14,7 +14,7 @@ A macOS menu bar app for monitoring GitHub Copilot premium interaction usage.
 ## Install
 
 ```sh
-brew install --cask oronbz/tap/cousebara
+brew tap oronbz/tap && brew install --cask cousebara
 ```
 
 Or download `Cousebara.zip` from the [latest release](https://github.com/oronbz/Cousebara/releases/latest), unzip, and move `Cousebara.app` to `/Applications`.

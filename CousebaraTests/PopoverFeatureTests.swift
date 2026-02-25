@@ -84,7 +84,7 @@ struct PopoverFeatureTests {
             $0.date = .constant(fixedDate)
         }
 
-        await store.send(.popoverAppeared) {
+        await store.send(.onAppear) {
             $0.isLoading = true
         }
 

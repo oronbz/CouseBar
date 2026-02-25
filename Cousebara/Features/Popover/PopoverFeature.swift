@@ -26,7 +26,7 @@ struct PopoverFeature {
         case binding(BindingAction<State>)
         case copiedConfirmationDismissed
         case onAppLaunch
-        case popoverAppeared
+        case onAppear
         case quitButtonTapped
         case refreshButtonTapped
         case retryButtonTapped
@@ -71,7 +71,7 @@ struct PopoverFeature {
                 state.currentVersion = versionClient.currentVersion()
                 return refreshAndRestartTimer(state: &state)
 
-            case .popoverAppeared:
+            case .onAppear:
                 return refreshAndRestartTimer(state: &state)
 
             case .quitButtonTapped:

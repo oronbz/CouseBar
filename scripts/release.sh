@@ -59,20 +59,6 @@ bold "[1/7] Bumping version to $NEW_VERSION..."
 sed -i '' "s/MARKETING_VERSION = $CURRENT_VERSION;/MARKETING_VERSION = $NEW_VERSION;/g" \
     "$PROJECT/project.pbxproj"
 
-# VersionClient.swift — preview value
-sed -i '' "s/currentVersion: { \"$CURRENT_VERSION\" }/currentVersion: { \"$NEW_VERSION\" }/" \
-    Cousebara/Dependencies/VersionClient.swift
-
-sed -i '' "s|tagName: \"v$CURRENT_VERSION\"|tagName: \"v$NEW_VERSION\"|" \
-    Cousebara/Dependencies/VersionClient.swift
-
-sed -i '' "s|releases/tag/v$CURRENT_VERSION|releases/tag/v$NEW_VERSION|" \
-    Cousebara/Dependencies/VersionClient.swift
-
-# PopoverView.swift — preview helper
-sed -i '' "s/currentVersion: \"$CURRENT_VERSION\"/currentVersion: \"$NEW_VERSION\"/g" \
-    Cousebara/Features/Popover/PopoverView.swift
-
 green "  Version bumped in source files"
 
 # ─── Step 2: Run tests ─────────────────────────────────────────────────────────

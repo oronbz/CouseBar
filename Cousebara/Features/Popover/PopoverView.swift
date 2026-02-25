@@ -37,7 +37,7 @@ struct PopoverView: View {
         .padding(16)
         .frame(width: 280)
         .onAppear {
-            store.send(.popoverAppeared)
+            store.send(.onAppear)
         }
     }
 
@@ -376,113 +376,102 @@ struct PopoverProgressBar: View {
 
 // MARK: - Previews
 
-private func makePreviewState(
+private func makePreviewResponse(
+    usage: QuotaSnapshot,
+    login: String = "oronbz",
+    plan: String = "enterprise",
+    resetDate: String = "2026-03-01"
+) -> CopilotUserResponse {
+    CopilotUserResponse(
+        login: login,
+        copilotPlan: plan,
+        quotaResetDate: resetDate,
+        quotaSnapshots: QuotaSnapshots(premiumInteractions: usage)
+    )
+}
+
+private func makePreviewStore(
     usage: QuotaSnapshot,
     availableUpdate: String? = nil
-) -> PopoverFeature.State {
-    PopoverFeature.State(
-        availableUpdate: availableUpdate,
-        currentVersion: "1.5.0",
-        lastUpdated: Date(),
-        login: "oronbz",
-        plan: "enterprise",
-        resetDate: "2026-03-01",
-        usage: usage
-    )
+) -> StoreOf<PopoverFeature> {
+    let response = makePreviewResponse(usage: usage)
+    var initialState = PopoverFeature.State()
+    if availableUpdate != nil {
+        initialState.currentVersion = "0.0.0"
+    }
+    return Store(initialState: initialState) {
+        PopoverFeature()
+    } withDependencies: {
+        $0[CopilotAPIClient.self].readToken = { "preview-token" }
+        $0[CopilotAPIClient.self].fetchUsage = { _ in response }
+        if let availableUpdate {
+            $0[VersionClient.self].currentVersion = { "0.0.0" }
+            $0[VersionClient.self].fetchLatestRelease = {
+                GitHubRelease(tagName: "v\(availableUpdate)", htmlUrl: "")
+            }
+        }
+    }
 }
 
 #Preview("Low Usage (30%)") {
-    PopoverView(
-        store: Store(initialState: makePreviewState(usage: .lowUsage)) {
-            PopoverFeature()
-        }
-    )
+    PopoverView(store: makePreviewStore(usage: .lowUsage))
 }
 
 #Preview("Medium Usage (65%)") {
-    PopoverView(
-        store: Store(initialState: makePreviewState(usage: .mediumUsage)) {
-            PopoverFeature()
-        }
-    )
+    PopoverView(store: makePreviewStore(usage: .mediumUsage))
 }
 
 #Preview("High Usage (90%)") {
-    PopoverView(
-        store: Store(initialState: makePreviewState(usage: .highUsage)) {
-            PopoverFeature()
-        }
-    )
+    PopoverView(store: makePreviewStore(usage: .highUsage))
 }
 
 #Preview("At Limit (100%)") {
-    PopoverView(
-        store: Store(initialState: makePreviewState(usage: .atLimit)) {
-            PopoverFeature()
-        }
-    )
+    PopoverView(store: makePreviewStore(usage: .atLimit))
 }
 
 #Preview("Slightly Over (110%)") {
-    PopoverView(
-        store: Store(initialState: makePreviewState(usage: .slightlyOver)) {
-            PopoverFeature()
-        }
-    )
+    PopoverView(store: makePreviewStore(usage: .slightlyOver))
 }
 
 #Preview("Over Limit (154%)") {
-    PopoverView(
-        store: Store(initialState: makePreviewState(usage: .overLimit)) {
-            PopoverFeature()
-        }
-    )
+    PopoverView(store: makePreviewStore(usage: .overLimit))
 }
 
 #Preview("Loading") {
     PopoverView(
         store: Store(initialState: PopoverFeature.State()) {
             PopoverFeature()
+        } withDependencies: {
+            $0[CopilotAPIClient.self].readToken = { "preview-token" }
+            $0[CopilotAPIClient.self].fetchUsage = { _ in
+                try await Task.sleep(for: .seconds(999))
+                return makePreviewResponse(usage: .mediumUsage)
+            }
         }
     )
 }
 
 #Preview("Error") {
     PopoverView(
-        store: Store(
-            initialState: PopoverFeature.State(
-                currentVersion: "1.5.0",
-                error: CopilotError.apiError.localizedDescription
-            )
-        ) {
+        store: Store(initialState: PopoverFeature.State()) {
             PopoverFeature()
+        } withDependencies: {
+            $0[CopilotAPIClient.self].readToken = { "preview-token" }
+            $0[CopilotAPIClient.self].fetchUsage = { _ in throw CopilotError.apiError }
         }
     )
 }
 
 #Preview("Needs Auth") {
     PopoverView(
-        store: Store(
-            initialState: PopoverFeature.State(
-                auth: AuthFeature.State(),
-                error: CopilotError.tokenFileMissing.localizedDescription,
-                needsAuth: true
-            )
-        ) {
+        store: Store(initialState: PopoverFeature.State()) {
             PopoverFeature()
+        } withDependencies: {
+            $0[CopilotAPIClient.self].readToken = { throw CopilotError.tokenFileMissing }
         }
     )
 }
 
 #Preview("Update Available") {
-    PopoverView(
-        store: Store(
-            initialState: makePreviewState(
-                usage: .mediumUsage,
-                availableUpdate: "1.5.0"
-            )
-        ) {
-            PopoverFeature()
-        }
-    )
+    PopoverView(store: makePreviewStore(usage: .mediumUsage, availableUpdate: "2.0.0"))
 }

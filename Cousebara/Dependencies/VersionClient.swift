@@ -13,9 +13,9 @@ struct VersionClient: Sendable {
 extension VersionClient: TestDependencyKey {
     static var previewValue: VersionClient {
         VersionClient(
-            currentVersion: { "1.4.0" },
+            currentVersion: { "1.5.0" },
             fetchLatestRelease: {
-                GitHubRelease(tagName: "v1.4.0", htmlUrl: "https://github.com/oronbz/cousebara/releases/tag/v1.4.0")
+                GitHubRelease(tagName: "v1.5.0", htmlUrl: "https://github.com/oronbz/cousebara/releases/tag/v1.5.0")
             },
             copyUpdateCommand: {}
         )

@@ -382,7 +382,7 @@ private func makePreviewState(
 ) -> PopoverFeature.State {
     PopoverFeature.State(
         availableUpdate: availableUpdate,
-        currentVersion: "1.4.0",
+        currentVersion: "1.5.0",
         lastUpdated: Date(),
         login: "oronbz",
         plan: "enterprise",
@@ -451,7 +451,7 @@ private func makePreviewState(
     PopoverView(
         store: Store(
             initialState: PopoverFeature.State(
-                currentVersion: "1.4.0",
+                currentVersion: "1.5.0",
                 error: CopilotError.apiError.localizedDescription
             )
         ) {

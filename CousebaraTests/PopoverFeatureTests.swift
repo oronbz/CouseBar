@@ -100,6 +100,7 @@ struct PopoverFeatureTests {
             $0.resetDate = "2026-03-01"
             $0.usage = .mediumUsage
             $0.lastUpdated = fixedDate
+            $0.paceReserve = PaceReserve(percentTimeElapsed: 0.0, reserve: -65.0)
         }
 
         await store.receive(\.versionCheckResponse.success)
@@ -149,6 +150,7 @@ struct PopoverFeatureTests {
             $0.resetDate = "2026-04-01"
             $0.usage = .highUsage
             $0.lastUpdated = fixedDate
+            $0.paceReserve = PaceReserve(percentTimeElapsed: 0.0, reserve: -90.0)
         }
     }
 
@@ -175,6 +177,7 @@ struct PopoverFeatureTests {
             $0.resetDate = "2026-03-01"
             $0.usage = .mediumUsage
             $0.lastUpdated = fixedDate
+            $0.paceReserve = PaceReserve(percentTimeElapsed: 0.0, reserve: -65.0)
         }
     }
 
@@ -265,6 +268,7 @@ struct PopoverFeatureTests {
             $0.resetDate = "2026-03-01"
             $0.usage = .mediumUsage
             $0.lastUpdated = fixedDate
+            $0.paceReserve = PaceReserve(percentTimeElapsed: 0.0, reserve: -65.0)
         }
     }
 
@@ -297,6 +301,10 @@ struct PopoverFeatureTests {
             $0.resetDate = "2026-03-01"
             $0.usage = .overLimit
             $0.lastUpdated = fixedDate
+            $0.paceReserve = PaceReserve(
+                percentTimeElapsed: 0.0,
+                reserve: -154.099
+            )
         }
     }
 
@@ -493,5 +501,190 @@ struct PopoverFeatureTests {
         await store.send(.versionCheckResponse(.success(newerRelease))) {
             $0.availableUpdate = "2.0.0"
         }
+    }
+}
+
+// MARK: - PaceReserve Tests
+
+struct PaceReserveTests {
+    private let calendar = Calendar(identifier: .gregorian)
+
+    @Test func midMonth_underPace() {
+        // Feb 15 = ~50% through Feb 1 – Mar 1 period, 30% used → 20% reserve
+        let now = dateFromString("2026-02-15")!
+        let result = PaceReserve.calculate(
+            percentUsed: 30.0,
+            resetDateString: "2026-03-01",
+            now: now,
+            calendar: calendar
+        )
+        #expect(result != nil)
+        #expect(result!.isUnderPace == true)
+        #expect(result!.reserve > 0)
+    }
+
+    @Test func midMonth_overPace() {
+        // Feb 15 = ~50%, 90% used → -40% reserve
+        let now = dateFromString("2026-02-15")!
+        let result = PaceReserve.calculate(
+            percentUsed: 90.0,
+            resetDateString: "2026-03-01",
+            now: now,
+            calendar: calendar
+        )
+        #expect(result != nil)
+        #expect(result!.isUnderPace == false)
+        #expect(result!.reserve < 0)
+    }
+
+    @Test func startOfPeriod() {
+        let now = dateFromString("2026-02-01")!
+        let result = PaceReserve.calculate(
+            percentUsed: 10.0,
+            resetDateString: "2026-03-01",
+            now: now,
+            calendar: calendar
+        )
+        #expect(result != nil)
+        #expect(result!.percentTimeElapsed < 1)
+        #expect(result!.reserve < 0) // 0% time - 10% used
+    }
+
+    @Test func endOfPeriod() {
+        // Feb 28 = very close to 100%
+        let now = dateFromString("2026-02-28")!
+        let result = PaceReserve.calculate(
+            percentUsed: 80.0,
+            resetDateString: "2026-03-01",
+            now: now,
+            calendar: calendar
+        )
+        #expect(result != nil)
+        #expect(result!.percentTimeElapsed > 90)
+        #expect(result!.isUnderPace == true)
+    }
+
+    @Test func beforePeriodStart_clampsToZero() {
+        // Jan 1 is before Feb 1 period start
+        let now = dateFromString("2026-01-01")!
+        let result = PaceReserve.calculate(
+            percentUsed: 30.0,
+            resetDateString: "2026-03-01",
+            now: now,
+            calendar: calendar
+        )
+        #expect(result != nil)
+        #expect(result!.percentTimeElapsed == 0.0)
+    }
+
+    @Test func afterResetDate_clampsTo100() {
+        let now = dateFromString("2026-03-15")!
+        let result = PaceReserve.calculate(
+            percentUsed: 50.0,
+            resetDateString: "2026-03-01",
+            now: now,
+            calendar: calendar
+        )
+        #expect(result != nil)
+        #expect(result!.percentTimeElapsed == 100.0)
+    }
+
+    @Test func invalidDateString_returnsNil() {
+        let result = PaceReserve.calculate(
+            percentUsed: 50.0,
+            resetDateString: "not-a-date",
+            now: Date(),
+            calendar: calendar
+        )
+        #expect(result == nil)
+    }
+
+    @Test func overLimitUsage() {
+        let now = dateFromString("2026-02-15")!
+        let result = PaceReserve.calculate(
+            percentUsed: 154.099,
+            resetDateString: "2026-03-01",
+            now: now,
+            calendar: calendar
+        )
+        #expect(result != nil)
+        #expect(result!.isUnderPace == false)
+        #expect(result!.absoluteReserve > 100)
+    }
+
+    // MARK: - Reducer Integration
+
+    @Test @MainActor func reducer_setsPaceReserveOnSuccess() async {
+        let midMonthDate = dateFromString("2026-02-15")!
+        let response = CopilotUserResponse(
+            login: "testuser",
+            copilotPlan: "enterprise",
+            quotaResetDate: "2026-03-01",
+            quotaSnapshots: QuotaSnapshots(premiumInteractions: .lowUsage)
+        )
+
+        let store = TestStore(initialState: PopoverFeature.State()) {
+            PopoverFeature()
+        } withDependencies: {
+            $0[CopilotAPIClient.self].readToken = { "mock-token" }
+            $0[CopilotAPIClient.self].fetchUsage = { _ in response }
+            $0.date = .constant(midMonthDate)
+        }
+
+        await store.send(.refreshButtonTapped) {
+            $0.isLoading = true
+        }
+
+        await store.receive(\.usageResponse.success) {
+            $0.isLoading = false
+            $0.login = "testuser"
+            $0.plan = "enterprise"
+            $0.resetDate = "2026-03-01"
+            $0.usage = .lowUsage
+            $0.lastUpdated = midMonthDate
+            $0.paceReserve = PaceReserve.calculate(
+                percentUsed: QuotaSnapshot.lowUsage.percentUsed,
+                resetDateString: "2026-03-01",
+                now: midMonthDate
+            )
+        }
+    }
+
+    @Test @MainActor func reducer_nilPaceReserveWhenNoResetDate() async {
+        let response = CopilotUserResponse(
+            login: "testuser",
+            copilotPlan: "enterprise",
+            quotaResetDate: nil,
+            quotaSnapshots: QuotaSnapshots(premiumInteractions: .lowUsage)
+        )
+
+        let store = TestStore(initialState: PopoverFeature.State()) {
+            PopoverFeature()
+        } withDependencies: {
+            $0[CopilotAPIClient.self].readToken = { "mock-token" }
+            $0[CopilotAPIClient.self].fetchUsage = { _ in response }
+            $0.date = .constant(Date())
+        }
+
+        await store.send(.refreshButtonTapped) {
+            $0.isLoading = true
+        }
+
+        await store.receive(\.usageResponse.success) {
+            $0.isLoading = false
+            $0.login = "testuser"
+            $0.plan = "enterprise"
+            $0.resetDate = nil
+            $0.usage = .lowUsage
+            $0.lastUpdated = store.dependencies.date.now
+            $0.paceReserve = nil
+        }
+    }
+
+    private func dateFromString(_ string: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = calendar.timeZone
+        return formatter.date(from: string)
     }
 }

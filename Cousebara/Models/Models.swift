@@ -242,6 +242,50 @@ enum AuthError: LocalizedError, Equatable {
     }
 }
 
+// MARK: - Pace Reserve
+
+struct PaceReserve: Equatable, Sendable {
+    let percentTimeElapsed: Double
+    let reserve: Double
+
+    var isUnderPace: Bool { reserve >= 0 }
+    var absoluteReserve: Double { abs(reserve) }
+
+    static func calculate(
+        percentUsed: Double,
+        resetDateString: String,
+        now: Date,
+        calendar: Calendar = .current
+    ) -> PaceReserve? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = calendar.timeZone
+
+        guard let resetDate = formatter.date(from: resetDateString) else { return nil }
+        guard let periodStart = calendar.date(byAdding: .month, value: -1, to: resetDate) else {
+            return nil
+        }
+
+        let totalSeconds = resetDate.timeIntervalSince(periodStart)
+        guard totalSeconds > 0 else { return nil }
+
+        let elapsedSeconds = now.timeIntervalSince(periodStart)
+        let fractionElapsed = elapsedSeconds / totalSeconds
+        let percentTimeElapsed = min(max(fractionElapsed * 100, 0), 100)
+
+        return PaceReserve(
+            percentTimeElapsed: percentTimeElapsed,
+            reserve: percentTimeElapsed - percentUsed
+        )
+    }
+}
+
+extension PaceReserve {
+    static let underPace = PaceReserve(percentTimeElapsed: 50, reserve: 20)
+    static let onPace = PaceReserve(percentTimeElapsed: 50, reserve: 0)
+    static let overPace = PaceReserve(percentTimeElapsed: 50, reserve: -15)
+}
+
 // MARK: - Preview Mock Data
 
 extension QuotaSnapshot {

@@ -14,6 +14,7 @@ struct PopoverFeature {
         var lastUpdated: Date?
         var login: String?
         var needsAuth = false
+        var paceReserve: PaceReserve?
         var plan: String?
         var resetDate: String?
         var showCopiedConfirmation = false
@@ -126,6 +127,15 @@ struct PopoverFeature {
                 state.lastUpdated = now
                 state.error = nil
                 state.needsAuth = false
+                if let usage = state.usage, let resetDate = state.resetDate {
+                    state.paceReserve = PaceReserve.calculate(
+                        percentUsed: usage.percentUsed,
+                        resetDateString: resetDate,
+                        now: now
+                    )
+                } else {
+                    state.paceReserve = nil
+                }
                 return .none
 
             case .usageResponse(.failure(let error)):

@@ -90,8 +90,29 @@ struct PopoverView: View {
             }
 
             // Large progress bar
-            PopoverProgressBar(usage: usage, showRemaining: store.showRemaining)
-                .frame(height: 12)
+            PopoverProgressBar(
+                usage: usage,
+                showRemaining: store.showRemaining,
+                paceReserve: store.paceReserve
+            )
+            .frame(height: 12)
+
+            // Pace reserve indicator
+            if let pace = store.paceReserve {
+                HStack(spacing: 4) {
+                    Image(systemName: pace.isUnderPace
+                        ? "checkmark.circle.fill"
+                        : "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                    Text(String(
+                        format: "%.0f%% %@",
+                        pace.absoluteReserve,
+                        pace.isUnderPace ? "in reserve" : "over pace"
+                    ))
+                    .font(.caption)
+                }
+                .foregroundStyle(pace.isUnderPace ? .green : .orange)
+            }
         }
     }
 
@@ -127,6 +148,14 @@ struct PopoverView: View {
 
             if let resetDate = store.resetDate {
                 detailRow("Resets", value: formattedResetDate(resetDate))
+            }
+
+            if let pace = store.paceReserve {
+                detailRow(
+                    "Pace",
+                    value: pace.isUnderPace ? "Lasts until reset" : "May exceed limit",
+                    color: pace.isUnderPace ? .green : .orange
+                )
             }
         }
     }
@@ -318,6 +347,7 @@ struct PopoverView: View {
 struct PopoverProgressBar: View {
     let usage: QuotaSnapshot
     let showRemaining: Bool
+    var paceReserve: PaceReserve?
 
     private let cornerRadius: CGFloat = 4
 
@@ -338,6 +368,15 @@ struct PopoverProgressBar: View {
                     overLimitFill(totalWidth: totalWidth, height: height)
                 } else {
                     normalFill(totalWidth: totalWidth, height: height)
+                }
+
+                // Pace tick mark
+                if !showRemaining, let pace = paceReserve {
+                    let tickX = totalWidth * CGFloat(pace.percentTimeElapsed / 100)
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.6))
+                        .frame(width: 1.5, height: height + 4)
+                        .position(x: tickX, y: height / 2)
                 }
             }
         }
@@ -397,7 +436,7 @@ private func makePreviewResponse(
     usage: QuotaSnapshot,
     login: String = "oronbz",
     plan: String = "enterprise",
-    resetDate: String = "2026-03-01"
+    resetDate: String = "2026-03-15"
 ) -> CopilotUserResponse {
     CopilotUserResponse(
         login: login,
@@ -409,7 +448,8 @@ private func makePreviewResponse(
 
 private func makePreviewStore(
     usage: QuotaSnapshot,
-    availableUpdate: String? = nil
+    availableUpdate: String? = nil,
+    previewDate: Date = Date()
 ) -> StoreOf<PopoverFeature> {
     let response = makePreviewResponse(usage: usage)
     var initialState = PopoverFeature.State()
@@ -421,6 +461,7 @@ private func makePreviewStore(
     } withDependencies: {
         $0[CopilotAPIClient.self].readToken = { "preview-token" }
         $0[CopilotAPIClient.self].fetchUsage = { _ in response }
+        $0.date = .constant(previewDate)
         if let availableUpdate {
             $0[VersionClient.self].currentVersion = { "0.0.0" }
             $0[VersionClient.self].fetchLatestRelease = {
@@ -492,3 +533,11 @@ private func makePreviewStore(
 #Preview("Update Available") {
     PopoverView(store: makePreviewStore(usage: .mediumUsage, availableUpdate: "2.0.0"))
 }
+#Preview("Under Pace (30% used, mid-month)") {
+    PopoverView(store: makePreviewStore(usage: .lowUsage))
+}
+
+#Preview("Over Pace (90% used, mid-month)") {
+    PopoverView(store: makePreviewStore(usage: .highUsage))
+}
+
